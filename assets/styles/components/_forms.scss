@@ -1,0 +1,43 @@
+div.wpcf7 {
+
+}
+
+#field-card-number {
+  letter-spacing: 0.15rem;
+  font-size: 1.2rem;
+}
+
+#field-card-cvv {
+  letter-spacing: 0.15rem;
+  font-size: 1.2rem;
+}
+
+.card-main-info-holder {
+  display: flex;
+  justify-content: space-between;
+}
+
+.card-info {
+  position: relative;
+
+  &__cvv {
+    width: 25%;
+  }
+}
+
+.card__date-field {
+  font-weight: 500;
+}
+
+.card__data-item--error {
+  border-bottom-color: #ff4a4a;
+}
+
+.submitted > form {
+  display: none;
+}
+
+.request-box {
+  padding: 90px 0;
+  margin: auto;
+}

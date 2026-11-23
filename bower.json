@@ -1,0 +1,11 @@
+{
+  "name": "SD Lab - Theme Development",
+  "homepage": "https://sdlab.com.ua/",
+  "authors": [
+    "SDLab <info@sdlab.com.ua>"
+  ],
+  "license": "MIT",
+  "private": true,
+  "dependencies": {},
+  "overrides": {}
+}

@@ -1,0 +1,33 @@
+{
+  "dependencies": {
+    "main.js": {
+      "files": [
+        "scripts/main.js"
+      ],
+      "main": true
+    },
+    "static.js": {
+      "files": [
+        "scripts/js.cookie.js",
+        "../static/assets/libs.min.js",
+        "../static/assets/fixto.min.js",
+        "../static/assets/candy-buffet.min.js"
+      ]
+    },
+    "main.css": {
+      "files": [
+        "styles/main.scss"
+      ],
+      "main": true
+    },
+    "images": {
+      "files": ["../static/images/**/*", "images/**/*"]
+    },
+    "fonts": {
+      "files": ["../static/assets/f/**", "fonts/**/*"]
+    }
+  },
+  "config": {
+    "devUrl": "https://candybuffet.local"
+  }
+}

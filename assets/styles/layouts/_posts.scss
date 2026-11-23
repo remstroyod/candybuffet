@@ -1,0 +1,18 @@
+.single-product {
+  @media (min-width: 768px) {
+    .info-content {
+      margin-bottom: 70px;
+    }
+
+    .card {
+      margin-bottom: 80px;
+    }
+  }
+  .page-wrap_wide {
+    position: relative;
+
+    & > .container {
+      position: static;
+    }
+  }
+}

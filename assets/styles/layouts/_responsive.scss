@@ -1,0 +1,14 @@
+@media all and (max-width: 640px) {
+  .card__hint {
+    margin-right: -22px;
+  }
+  .request-box__data {
+    justify-content: start;
+    padding-left: 30px;
+  }
+  .request-box__data-control {
+    max-width: 100%;
+    overflow: hidden;
+
+  }
+}

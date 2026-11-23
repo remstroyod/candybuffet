@@ -1,0 +1,95 @@
+/* Icon Float Away */
+@-webkit-keyframes hvr-icon-float-away {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    -webkit-transform: translateY(-1em);
+    transform: translateY(-1em);
+  }
+}
+
+@keyframes hvr-icon-float-away {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    -webkit-transform: translateY(-1em);
+    transform: translateY(-1em);
+  }
+}
+
+.footer {
+
+  &__logo {
+    width: 115px;
+    margin-right: 100px;
+    max-width: 100%;
+  }
+
+  &-horizontal {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .dev--block,
+  &__copyright {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 767px) {
+  .footer {
+    .dev-by img {
+      width: 60px;
+    }
+
+    &__copyright {
+      &, span {
+        display: block;
+      }
+    }
+  }
+}
+
+
+.modal-transfer {
+  .modal-dialog {
+    width: 680px;
+    max-width: 100%;
+  }
+
+  .success-box {
+    padding: 50px 0 25px;
+
+    &__social {
+      font-size: 12px;
+      margin-top: 35px;
+
+      .footer__socials {
+        justify-content: center;
+      }
+    }
+
+    &__text {
+      width: 100%;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #2c2d2f;
+    }
+
+    @media (max-width: 767px) {
+      &__title {
+        font-size: 24px;
+      }
+      &__text {
+        font-size: 14px;
+      }
+    }
+  }
+}

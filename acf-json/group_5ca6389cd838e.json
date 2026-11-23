@@ -1,0 +1,166 @@
+{
+    "key": "group_5ca6389cd838e",
+    "title": "Настройка продукта (торт)",
+    "fields": [
+        {
+            "key": "field_5ca76489d67ef",
+            "label": "Вес",
+            "name": "вес",
+            "type": "checkbox",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "choices": {
+                "1кг": "1кг",
+                "2кг": "2кг",
+                "3кг": "3кг",
+                "4кг": "4кг",
+                "5кг": "5кг",
+                "6кг": "6кг",
+                "7кг": "7кг",
+                "8кг": "8кг",
+                "9кг": "9кг",
+                "10кг": "10кг",
+                "11кг": "11кг",
+                "12кг": "12кг",
+                "13кг": "13кг",
+                "14кг": "14кг",
+                "15кг": "15кг"
+            },
+            "allow_custom": 0,
+            "default_value": [],
+            "layout": "horizontal",
+            "toggle": 0,
+            "return_format": "value",
+            "save_custom": 0
+        },
+        {
+            "key": "field_5ca764cf9bb6d",
+            "label": "Тип",
+            "name": "тип",
+            "type": "radio",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "choices": {
+                "b": "Бісквітний",
+                "m": "Мусовий"
+            },
+            "allow_null": 0,
+            "other_choice": 0,
+            "default_value": "",
+            "layout": "horizontal",
+            "return_format": "array",
+            "save_other_choice": 0
+        },
+        {
+            "key": "field_5ca63fb0db20a",
+            "label": "Стоимость за декор",
+            "name": "декор",
+            "type": "number",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": "грн",
+            "min": 0,
+            "max": "",
+            "step": ""
+        },
+        {
+            "key": "field_5ca63f003fa70",
+            "label": "Описание декора",
+            "name": "информация_декор",
+            "type": "group",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "layout": "table",
+            "sub_fields": [
+                {
+                    "key": "field_5ca63f003fa71",
+                    "label": "Изображение",
+                    "name": "image",
+                    "type": "image",
+                    "instructions": "Если есть",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "15",
+                        "class": "",
+                        "id": ""
+                    },
+                    "return_format": "id",
+                    "preview_size": "thumbnail",
+                    "library": "all",
+                    "min_width": "",
+                    "min_height": "",
+                    "min_size": "",
+                    "max_width": "",
+                    "max_height": "",
+                    "max_size": "",
+                    "mime_types": ""
+                },
+                {
+                    "key": "field_5ca63f003fa72",
+                    "label": "Описание",
+                    "name": "content",
+                    "type": "textarea",
+                    "instructions": "",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "placeholder": "",
+                    "maxlength": "",
+                    "rows": "",
+                    "new_lines": "br"
+                }
+            ]
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "post_taxonomy",
+                "operator": "==",
+                "value": "product_category:cakes"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": 1,
+    "description": "",
+    "modified": 1562154940
+}
