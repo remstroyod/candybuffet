@@ -326,9 +326,20 @@ function cb_ty_get_view_data(): array {
     return [ 'state' => 'not_found', 'order_number' => '', 'payment' => [], 'delivery' => [] ];
   }
 
-  // Отримувач — завжди покупець (billing), у т.ч. для замовлень «як подарунок»
-  $recipient = (string) cb_ty_meta( $order_id, 'simplebasket_billing_info->name' );
-  $phone     = (string) cb_ty_meta( $order_id, 'simplebasket_billing_info->phone' );
+  // Отримувач: для «На подарунок» — дані отримувача (плагін cb-black-friday), інакше покупець (billing)
+  $is_gift   = get_post_meta( $order_id, 'cbbf_order_for', true ) === 'gift';
+  $recipient = $is_gift ? (string) get_post_meta( $order_id, 'gift_to_name', true ) : (string) cb_ty_meta( $order_id, 'simplebasket_billing_info->name' );
+  $phone     = $is_gift ? (string) get_post_meta( $order_id, 'gift_to_phone', true ) : (string) cb_ty_meta( $order_id, 'simplebasket_billing_info->phone' );
+
+  // «Спробувати ще раз» — нова форма LiqPay для того самого замовлення (без повторного заповнення)
+  $retry_url = '';
+  if ( cb_ty_payment_method( $order_id ) === 'liqpay' && cb_ty_liqpay_state( $order_id ) === 'failed' ) {
+    $retry_url = add_query_arg( [
+      'action'   => 'cbbf_repay',
+      'order_id' => $order_id,
+      'key'      => (string) get_post_meta( $order_id, '_cb_ty_key', true ),
+    ], admin_url( 'admin-ajax.php' ) );
+  }
 
   $delivery = cb_ty_delivery_text( $order_id );
 
@@ -336,6 +347,7 @@ function cb_ty_get_view_data(): array {
     'state'        => 'ok',
     'order_number' => (string) $order_id, // Order::get_order_id() = post ID — той самий номер, що в листі
     'payment'      => cb_ty_payment_status( $order_id ),
+    'retry_url'    => $retry_url,
     'delivery'     => [
       'recipient' => trim( $recipient ),
       'phone'     => cb_ty_mask_phone( $phone ),
@@ -405,9 +417,19 @@ function cb_ty_purchase_payload( int $order_id ): array {
     $value = $sum;
   }
 
+  // Black Friday (плагін cb-black-friday): параметри для звіту після ЧП
+  $bf = get_post_meta( $order_id, '_cbbf_breakdown', true );
+
   return [
     'transaction_id' => (string) $order_id,
     'value'          => round( $value, 2 ),
+    'shipping'       => is_array( $bf ) ? (float) $bf['shipping'] : 0,
+    'discount'       => is_array( $bf ) ? (float) $bf['discount'] : 0,
+    'shipping_free'  => is_array( $bf ) ? ( ! empty( $bf['free_shipping'] ) || $bf['shipping_mode'] === 'pickup' ) : false,
+    'order_for'      => get_post_meta( $order_id, 'cbbf_order_for', true ) === 'gift' ? 'gift' : 'self',
+    'set_count'      => is_array( $bf ) ? (int) $bf['set_count'] : 0,
+    'gift_box'       => get_post_meta( $order_id, 'cbbf_gift_box', true ) !== '',
+    'ab_variant'     => (string) get_post_meta( $order_id, 'cbbf_ab_variant', true ),
     'currency'       => (string) cb_ty_meta( $order_id, 'simplebasket_payment_info->currency', 'UAH' ),
     'payment_type'   => cb_ty_payment_method( $order_id ),
     'items'          => $items,

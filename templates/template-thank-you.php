@@ -43,6 +43,12 @@ $icon_phone = '<svg class="ty-btn__icon" width="18" height="18" viewBox="0 0 24 
           <span class="ty-status__dot" aria-hidden="true"></span>
           <?php echo esc_html( $ty['payment']['label'] ); ?>
         </div>
+        <?php if ( ! empty( $ty['retry_url'] ) ): ?>
+          <p class="ty-hero__retry">
+            <a class="btn btn-default" href="<?php echo esc_url( $ty['retry_url'] ); ?>" rel="nofollow">Спробувати ще раз</a>
+          </p>
+          <p class="ty-hero__text ty-hero__text--visible">Дані замовлення збережено — заповнювати форму повторно не потрібно.</p>
+        <?php endif; ?>
       <?php endif; ?>
 
       <p class="ty-hero__text">Менеджер зв'яжеться з вами в робочий час, щоб підтвердити відправку.</p>

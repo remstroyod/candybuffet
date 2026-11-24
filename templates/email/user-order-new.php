@@ -218,6 +218,27 @@ $cart = $order->get_cart();
                     <?php endforeach; ?>
                     <!-- // END Product list -->
 
+                    <?php // Black Friday: знижка, пакет, доставка, подарунок (плагін cb-black-friday)
+                    if ( class_exists( '\CandyBuffet\BlackFriday\Checkout' ) ):
+                      $cbbf_rows = \CandyBuffet\BlackFriday\Checkout::order_summary( (int) $order->ID );
+                      unset( $cbbf_rows['Разом до сплати'] );
+                      if ( $cbbf_rows ): ?>
+                    <tr>
+                      <th style="margin:0 auto;padding:16px 0 4px;vertical-align:top;border-top:#2e2e2e 1px solid">
+                        <table style="border-collapse:collapse;display:table;padding:0;width:100%">
+                          <tbody>
+                          <?php foreach ( $cbbf_rows as $cbbf_k => $cbbf_v ): ?>
+                            <tr>
+                              <td style="margin:0;padding:4px 0;text-align:left;color:#2e2e2e;font-size:14px;line-height:18px;font-weight:400;font-family:Arial,Helvetica,sans-serif"><?= esc_html( $cbbf_k ) ?></td>
+                              <td style="margin:0;padding:4px 0 4px 16px;text-align:right;color:<?= strpos( $cbbf_k, 'Знижка' ) === 0 ? '#3c7a48' : '#2e2e2e' ?>;font-size:14px;line-height:18px;font-weight:400;font-family:Arial,Helvetica,sans-serif"><?= nl2br( esc_html( $cbbf_v ) ) ?></td>
+                            </tr>
+                          <?php endforeach; ?>
+                          </tbody>
+                        </table>
+                      </th>
+                    </tr>
+                    <?php endif; endif; ?>
+
                     <tr>
                       <th style="margin:0 auto;padding:20px 0;vertical-align:top;border-top:#2e2e2e 1px solid">
                         <table style="border-collapse:collapse;display:table;padding:0;width:100%">

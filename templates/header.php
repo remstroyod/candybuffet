@@ -6,6 +6,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
 <header class="header">
+	<?php do_action( 'cbbf_header_bar' ); // плашка Black Friday (плагін cb-black-friday) ?>
 	<?php get_template_part('templates/page-banner-top') ?>
 
     <div class="container">

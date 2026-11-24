@@ -683,62 +683,10 @@ add_filter( 'wpseo_breadcrumb_links', function ( $crumbs ) {
 } );
 
 /**
- * До оформлення (POST action=simplebasket_process_checkout):
- * додаємо вартість пакета у DECOR першого рядка і зберігаємо в сесію.
+ * Фірмовий пакет і дані подарунка тепер обробляє плагін cb-black-friday
+ * (ціна пакета береться з налаштувань на сервері, а не з форми; дані отримувача — CandyBuffet\BlackFriday\Checkout).
+ * Попередня версія коду — _backup_bf_20261123/.../functions.php.
  */
-add_action('init', function () {
-    if (empty($_POST['action']) || $_POST['action'] !== 'simplebasket_process_checkout') return;
-
-    $pack_price = isset($_POST['extras']['photo_pack']['price']) ? (float) $_POST['extras']['photo_pack']['price'] : 0.0;
-    if ($pack_price <= 0) return;
-
-    if (!class_exists(Cart::class)) return;
-    $cart  = Cart::get_instance();
-    $items = $cart->get_items();
-    if (empty($items)) return;
-
-    $firstId = array_key_first($items);
-
-    // ВСТАНОВИТИ рівно ціну пакета (не +=), щоб нічого не накопичувалось
-    $items[$firstId][Cart::DECOR] = $pack_price;
-
-    // оновити стан кошика і перерахувати totals для цього рядка
-    $cart->_items = $items; // у твоєму класі це робоча властивість
-    $qty = isset($items[$firstId][Cart::QUO]) ? (int)$items[$firstId][Cart::QUO] : 1;
-    $cart->update($firstId, $qty);
-
-    // КЛЮЧ: записати назад у сесію — звідси плагін рахує payment_info/liqpay
-    Helper::update_session_value(Cart::ITEMS, $items);
-});
-
-add_action('simplebasket_order/new_order', function ($order) {
-    $order_id = (is_object($order) && isset($order->ID)) ? (int)$order->ID : (int)$order;
-
-    // --- тільки зберігаємо дані подарунка/пакета ---
-    $gift_enabled = !empty($_POST['gift']['enabled']) ? '1' : '';
-    $gift_name    = isset($_POST['gift']['to_name'])  ? sanitize_text_field($_POST['gift']['to_name'])  : '';
-    $gift_phone   = isset($_POST['gift']['to_phone']) ? sanitize_text_field($_POST['gift']['to_phone']) : '';
-
-    update_post_meta($order_id, 'gift_enabled', $gift_enabled);
-    if ($gift_name !== '')  update_post_meta($order_id, 'gift_to_name',  $gift_name);
-    if ($gift_phone !== '') update_post_meta($order_id, 'gift_to_phone', $gift_phone);
-
-    $pack_label = isset($_POST['extras']['photo_pack']['label']) ? sanitize_text_field($_POST['extras']['photo_pack']['label']) : '';
-    $pack_price = isset($_POST['extras']['photo_pack']['price']) ? (float) $_POST['extras']['photo_pack']['price'] : 0.0;
-
-    if ($pack_label !== '') update_post_meta($order_id, 'photo_pack_label', $pack_label);
-    if ($pack_price > 0)    update_post_meta($order_id, 'photo_pack_price', $pack_price);
-
-    // --- ВАЖЛИВО: totals НЕ змінюємо! ---
-    // На цьому етапі $payment_info['total'] уже включає DECOR з кошика.
-    // За бажання: просто синхронізуємо відображення списку з payment_info->total.
-    $pi = get_post_meta($order_id, 'simplebasket_payment_info', true);
-    if (is_array($pi) && isset($pi['total']) && is_numeric($pi['total'])) {
-        update_post_meta($order_id, 'simplebasket_order_total', (float)$pi['total']);
-    }
-
-    // Кошик плагін сам чистить після створення замовлення, тому нічого додатково прибирати не треба.
-}, 10, 1);
 
 /**
  * Після створення замовлення чистимо кошик у сесії/кукі,
@@ -761,66 +709,7 @@ add_action('simplebasket_order/new_order', function () {
     }
 }, 100);
 
-/**
- * НА БУДЬ-ЯКОМУ GET (фронт): скидаємо DECOR у всіх рядках, щоб «хвіст» не тягнувся.
- *    Таким чином при новому замовленні рядки стартують без націнки,
- *    а потрібний DECOR додамо знову тільки на сабміті (п.1).
- */
-add_action('template_redirect', function () {
-    if (is_admin()) return;
-    if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return;
-
-    if (!class_exists(Cart::class)) return;
-    $cart  = Cart::get_instance();
-    $items = $cart->get_items();
-    if (empty($items)) return;
-
-    $changed = false;
-    foreach ($items as $id => $it) {
-        if (!empty($it[Cart::DECOR])) {
-            $items[$id][Cart::DECOR] = 0;
-            $changed = true;
-        }
-    }
-    if ($changed) {
-        $cart->_items = $items;
-        // Перерахунок totals для кожного зміненого рядка
-        foreach ($items as $id => $it) {
-            $cart->update($id, (int)($it[Cart::QUO] ?? 1));
-        }
-        Helper::update_session_value(Cart::ITEMS, $items);
-    }
-}, 9);
-
-add_action('add_meta_boxes', function(){
-  add_meta_box('ak_order_extras', 'Додаткові опції', function($post){
-    $photo_pack_label = get_post_meta($post->ID, 'photo_pack_label', true);
-    $photo_pack_price = get_post_meta($post->ID, 'photo_pack_price', true);
-    $gift_enabled     = get_post_meta($post->ID, 'gift_enabled', true); // '1' або ''
-    $gift_to_name     = get_post_meta($post->ID, 'gift_to_name', true);
-    $gift_to_phone    = get_post_meta($post->ID, 'gift_to_phone', true);
-
-    $rows = [
-      'Пакет з фото' => ($photo_pack_label !== '' ? $photo_pack_label : ''),
-      'Ціна пакету'  => (($photo_pack_price !== '' && $photo_pack_price != 0) ? $photo_pack_price : ''),
-      'Подарунок'    => ($gift_enabled === '1' ? 'Так' : ''),
-      'Отримувач'    => ($gift_to_name   !== '' ? $gift_to_name   : ''),
-      'Телефон'      => ($gift_to_phone  !== '' ? $gift_to_phone  : ''),
-    ];
-
-    echo '<div class="simplebasket_customer_address">
-            <div class="simplebasket_content_col simplebasket_content_col-one-half">
-              <table class="form-table">
-                <tbody>';
-                  foreach ($rows as $k => $v) {
-                    echo '<tr><th scope="row">'.esc_html($k).'</th><td>'.esc_html(is_scalar($v) ? $v : '').'</td></tr>';
-                  }
-    echo       '</tbody>
-              </table>
-            </div>
-          </div>';
-  }, 'simplebasket_order', 'normal', 'default');
-});
+// Скидання DECOR і метабокс «Додаткові опції» замінено плагіном cb-black-friday (метабокс «Black Friday: розрахунок і подарунок»).
 
 if ( ! function_exists( 'akweb_ga4_view_item' ) ) {
     function akweb_ga4_view_item( $product ) {
