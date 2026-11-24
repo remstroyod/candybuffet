@@ -176,8 +176,8 @@ $f             = static fn( string $n ) => $fragments[ $n ] ?? '';
                     <label for="gift-to-phone" class="control-label">Телефон отримувача</label>
                   </div>
                   <div class="cbbf-gift__card-slot" data-cbbf-card-slot="gift"><?= $card_on ? '' : $card_field ?></div>
-                  <? if ( $packs && ! $selected_pack ): ?>
-                    <p class="cbbf-gift__tip" data-cbbf-pack-tip>Фірмовий пакет? <a href="#cart-photo-packs">Оберіть розмір</a></p>
+                  <? if ( $packs ): ?>
+                    <p class="cbbf-gift__tip" data-cbbf-pack-tip <?= $selected_pack ? 'hidden' : '' ?>>Фірмовий пакет? <a href="#cart-photo-packs">Оберіть розмір</a></p>
                   <? endif ?>
                   <div class="form-group cbbf-date">
                     <input name="gift[date]" id="gift-date" type="date" class="form-control" min="<?= esc_attr( wp_date( 'Y-m-d' ) ) ?>">
@@ -218,7 +218,12 @@ $f             = static fn( string $n ) => $fragments[ $n ] ?? '';
                   <div class="delivery-chooser__items">
                     <? foreach ( $cart->get_delivery_methods() as $method_key => $method ):
                       $is_allowed = in_array( $method_key, $allowed_delivery, true );
-                      $price_text = $method_key === 'samovyviz' ? 'Безкоштовно' : ( $method_key === 'taxi' ? 'за тарифом таксі' : $method['price'] );
+                      $labels     = [
+                        'samovyviz' => 'Безкоштовно',
+                        'taxi'      => $has_bf ? (string) Settings::get( 'delivery_label_taxi' ) : 'за тарифом таксі',
+                        'nv'        => $has_bf ? (string) Settings::get( 'delivery_label_nv' ) : $method['price'],
+                      ];
+                      $price_text = ( $labels[ $method_key ] ?? '' ) !== '' ? $labels[ $method_key ] : $method['price'];
                       $title_text = $method_key === 'taxi' && mb_stripos( $method['title'], 'Києв' ) === false ? $method['title'] . ' (по Києву)' : $method['title'];
                       ?>
                       <div data-target="#delivery-method-<?= esc_attr( $method_key ) ?>" class="delivery-chooser__item radio">

@@ -3,9 +3,64 @@
 use SimpleBasket\Order;
 use SimpleBasket\Product;
 
-add_action( 'simplebasket_order/new_order', function ( Order $order ) {
-  if ( ! defined( 'KEYCRM_TOKEN' ) ) {
-    return;
+/**
+ * Доступ до KeyCRM: ключ і URL з адмінки (Simplebasket Settings → KeyCRM, опція simplebasket-keycrm).
+ * Якщо в адмінці порожньо — запасний варіант: константа KEYCRM_TOKEN у wp-config.php.
+ *
+ * @return array{token:string,url:string}
+ */
+function cb_keycrm_credentials(): array {
+  $opt   = (array) get_option( 'simplebasket-keycrm', [] );
+  $token = trim( (string) ( $opt['api_key'] ?? '' ) );
+  if ( $token === '' && defined( 'KEYCRM_TOKEN' ) ) {
+    $token = (string) KEYCRM_TOKEN;
+  }
+  $url = trim( (string) ( $opt['api_url'] ?? '' ) );
+  if ( $url === '' ) {
+    $url = 'https://openapi.keycrm.app/v1';
+  }
+  // Приймаємо і «https://openapi.keycrm.app», і «…/v1/», і випадково вставлене «…/v1/order».
+  $url = preg_replace( '~/order/?$~', '', rtrim( $url, '/' ) );
+  if ( ! preg_match( '~/v\d+$~', $url ) ) {
+    $url .= '/v1';
+  }
+
+  return [ 'token' => $token, 'url' => $url ];
+}
+
+/**
+ * source_uuid замовлення в KeyCRM. KeyCRM не приймає два замовлення з однаковим source_uuid,
+ * а локальна/preview копії сайту мають ті самі ID, що й бойовий сайт. Тому:
+ * бойовий сайт — просто ID; інші копії — з префіксом хоста (preview-5013, localhost-5011);
+ * після повторного надсилання — збережений унікальний _keycrm_uuid.
+ */
+function cb_keycrm_source_uuid( $order_id ): string {
+  $saved = (string) get_post_meta( $order_id, '_keycrm_uuid', true );
+  if ( $saved !== '' ) {
+    return $saved;
+  }
+  $host = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+  $prod = (string) apply_filters( 'cb_keycrm_production_host', 'candybuffet.kiev.ua' );
+  if ( $host === $prod || $host === 'www.' . $prod ) {
+    return (string) $order_id;
+  }
+
+  return strtok( $host, '.' ) . '-' . $order_id;
+}
+
+add_action( 'simplebasket_order/new_order', 'cb_keycrm_send_order' );
+
+/**
+ * Надіслати замовлення в KeyCRM. Викликається при створенні замовлення
+ * і кнопкою «Надіслати в KeyCRM» у картці замовлення.
+ *
+ * @return bool чи створено замовлення в CRM
+ */
+function cb_keycrm_send_order( Order $order, bool $retry = true ): bool {
+  $crm = cb_keycrm_credentials();
+  if ( $crm['token'] === '' ) {
+    update_post_meta( $order->ID, 'keycrm_error', 'Не задано API key KeyCRM (Simplebasket Settings → KeyCRM).' );
+    return false;
   }
 
   // Cart
@@ -85,7 +140,7 @@ add_action( 'simplebasket_order/new_order', function ( Order $order ) {
   $jayParsedAry = [
     'source_id'     => 1,
     'source_name'   => 'Candy Buffet',
-    'source_uuid'   => $order->ID,
+    'source_uuid'   => cb_keycrm_source_uuid( $order->ID ),
     'buyer_comment' => $order_notes,
     // 'shipping_price' => $shipping_total,
     'ordered_at'    => $date,
@@ -103,7 +158,7 @@ add_action( 'simplebasket_order/new_order', function ( Order $order ) {
       'recipient_phone'          => $bf_is_gift ? (string) get_post_meta( $order->ID, 'gift_to_phone', true ) : $phone,
     ],
     'products'      => $products,
-    'total_discount'  => $bf_discount,
+    'discount_amount' => $bf_discount,
     'shipping_price'  => $bf_shipping,
     'manager_comment' => implode( "\n", $bf_comment ),
     'is_gift'         => $bf_is_gift,
@@ -120,12 +175,12 @@ add_action( 'simplebasket_order/new_order', function ( Order $order ) {
   $headers = array(
     'Content-Type'  => 'application/json',
     'Accept'        => 'application/json',
-    'Authorization' => 'Bearer ' . KEYCRM_TOKEN,
+    'Authorization' => 'Bearer ' . $crm['token'],
   );
 
   add_action( 'http_api_debug', 'debug_wp_remote_post_and_get_request', 10, 5 );
 
-  $response = wp_remote_post( 'https://openapi.keycrm.app/v1/order', [
+  $response = wp_remote_post( $crm['url'] . '/order', [
     'timeout' => 20,
     'headers' => $headers,
     'body'    => json_encode( $jayParsedAry ),
@@ -133,11 +188,52 @@ add_action( 'simplebasket_order/new_order', function ( Order $order ) {
 
   remove_action( 'http_api_debug', 'debug_wp_remote_post_and_get_request', 10 );
 
-  if ( ! is_wp_error( $response ) ) {
-    $response_body = wp_remote_retrieve_body( $response );
+  if ( is_wp_error( $response ) ) {
+    update_post_meta( $order->ID, 'keycrm_error', 'HTTP: ' . $response->get_error_message() );
+    error_log( '[keycrm] order ' . $order->ID . ' not sent: ' . $response->get_error_message() );
 
-    update_post_meta( $order->ID, 'keycrm_response', $response_body );
+    return false;
   }
+
+  $code          = (int) wp_remote_retrieve_response_code( $response );
+  $response_body = wp_remote_retrieve_body( $response );
+
+  if ( $code >= 200 && $code < 300 ) {
+    // wp_slash: update_post_meta знімає «\», без цього JSON із лапками/юнікодом ламається.
+    update_post_meta( $order->ID, 'keycrm_response', wp_slash( $response_body ) );
+    delete_post_meta( $order->ID, 'keycrm_error' );
+
+    return true;
+  }
+
+  // Такий source_uuid уже є в CRM (напр. тестове замовлення з копії сайту з тим самим ID) —
+  // повторюємо один раз з унікальним uuid.
+  if ( $retry && $code === 422 && stripos( (string) $response_body, 'source_uuid' ) !== false ) {
+    update_post_meta( $order->ID, '_keycrm_uuid', $order->ID . '-' . wp_date( 'ymdHis' ) );
+
+    return cb_keycrm_send_order( $order, false );
+  }
+
+  update_post_meta( $order->ID, 'keycrm_error', wp_slash( 'HTTP ' . $code . ': ' . mb_substr( (string) $response_body, 0, 1000 ) ) );
+  error_log( '[keycrm] order ' . $order->ID . ' rejected (' . $code . '): ' . $response_body );
+
+  return false;
+}
+
+/** Кнопка «Надіслати в KeyCRM» у картці замовлення (блок Black Friday). */
+add_action( 'admin_post_cb_keycrm_resend', function () {
+  $id = (int) ( $_GET['order'] ?? 0 );
+  if ( ! $id || ! current_user_can( 'edit_post', $id ) || ! wp_verify_nonce( $_GET['_wpnonce'] ?? '', 'cb_keycrm_resend_' . $id ) ) {
+    wp_die( 'Немає доступу.' );
+  }
+  $raw = (string) get_post_meta( $id, 'keycrm_response', true );
+  if ( preg_match( '~^\{"id":\d+~', $raw ) ) {
+    wp_safe_redirect( add_query_arg( 'cb_keycrm', 'already', get_edit_post_link( $id, 'url' ) ) );
+    exit;
+  }
+  $ok = cb_keycrm_send_order( new Order( $id ) );
+  wp_safe_redirect( add_query_arg( 'cb_keycrm', $ok ? 'sent' : 'failed', get_edit_post_link( $id, 'url' ) ) );
+  exit;
 } );
 
 function debug_wp_remote_post_and_get_request( $response, $context, $class, $r, $url ) {
@@ -158,7 +254,8 @@ function debug_wp_remote_post_and_get_request( $response, $context, $class, $r, 
  * або через GET /order/{id}?include=payments.
  */
 add_action( 'cb_liqpay_status', function ( $order, $status, $data = [] ) {
-  if ( ! defined( 'KEYCRM_TOKEN' ) || ! is_object( $order ) || empty( $order->ID ) ) {
+  $crm = cb_keycrm_credentials();
+  if ( $crm['token'] === '' || ! is_object( $order ) || empty( $order->ID ) ) {
     return;
   }
   // hold_wait — кошти заблоковані на картці клієнта (схема «hold»): для клієнта замовлення оплачене
@@ -169,8 +266,14 @@ add_action( 'cb_liqpay_status', function ( $order, $status, $data = [] ) {
     return;
   }
 
-  $created = json_decode( (string) get_post_meta( $order->ID, 'keycrm_response', true ), true );
+  $raw     = (string) get_post_meta( $order->ID, 'keycrm_response', true );
+  $created = json_decode( $raw, true );
   $crm_id  = (int) ( $created['id'] ?? 0 );
+  if ( ! $crm_id && preg_match( '~^\{"id":(\d+)~', $raw, $m ) ) {
+    // Старі замовлення: JSON збережено без «\» і він не парситься, але id на початку.
+    $crm_id  = (int) $m[1];
+    $created = [];
+  }
   if ( ! $crm_id ) {
     error_log( '[keycrm] paid sync: no CRM order id for WP order ' . $order->ID );
     return;
@@ -179,12 +282,12 @@ add_action( 'cb_liqpay_status', function ( $order, $status, $data = [] ) {
   $headers = [
     'Content-Type'  => 'application/json',
     'Accept'        => 'application/json',
-    'Authorization' => 'Bearer ' . KEYCRM_TOKEN,
+    'Authorization' => 'Bearer ' . $crm['token'],
   ];
 
   $payment_id = (int) ( $created['payments'][0]['id'] ?? 0 );
   if ( ! $payment_id ) {
-    $res  = wp_remote_get( 'https://openapi.keycrm.app/v1/order/' . $crm_id . '?include=payments', [ 'timeout' => 15, 'headers' => $headers ] );
+    $res  = wp_remote_get( $crm['url'] . '/order/' . $crm_id . '?include=payments', [ 'timeout' => 15, 'headers' => $headers ] );
     $body = is_wp_error( $res ) ? [] : json_decode( (string) wp_remote_retrieve_body( $res ), true );
     $payments   = $body['payments'] ?? ( $body['data']['payments'] ?? [] );
     $payment_id = (int) ( $payments[0]['id'] ?? 0 );
@@ -194,7 +297,7 @@ add_action( 'cb_liqpay_status', function ( $order, $status, $data = [] ) {
     return;
   }
 
-  $res  = wp_remote_request( 'https://openapi.keycrm.app/v1/order/' . $crm_id . '/payment/' . $payment_id, [
+  $res  = wp_remote_request( $crm['url'] . '/order/' . $crm_id . '/payment/' . $payment_id, [
     'method'  => 'PUT',
     'timeout' => 15,
     'headers' => $headers,
