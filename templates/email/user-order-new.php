@@ -230,7 +230,7 @@ $cart = $order->get_cart();
                           <?php foreach ( $cbbf_rows as $cbbf_k => $cbbf_v ): ?>
                             <tr>
                               <td style="margin:0;padding:4px 0;text-align:left;color:#2e2e2e;font-size:14px;line-height:18px;font-weight:400;font-family:Arial,Helvetica,sans-serif"><?= esc_html( $cbbf_k ) ?></td>
-                              <td style="margin:0;padding:4px 0 4px 16px;text-align:right;color:<?= strpos( $cbbf_k, 'Знижка' ) === 0 ? '#3c7a48' : '#2e2e2e' ?>;font-size:14px;line-height:18px;font-weight:400;font-family:Arial,Helvetica,sans-serif"><?= nl2br( esc_html( $cbbf_v ) ) ?></td>
+                              <td style="margin:0;padding:4px 0 4px 16px;text-align:right;color:<?= ( strpos( $cbbf_k, 'Знижка' ) === 0 || strpos( $cbbf_k, 'Промокод' ) === 0 ) ? '#3c7a48' : '#2e2e2e' ?>;font-size:14px;line-height:18px;font-weight:400;font-family:Arial,Helvetica,sans-serif"><?= nl2br( esc_html( $cbbf_v ) ) ?></td>
                             </tr>
                           <?php endforeach; ?>
                           </tbody>

@@ -111,7 +111,8 @@ function cb_keycrm_send_order( Order $order, bool $retry = true ): bool {
 
   // Black Friday (плагін cb-black-friday): пакет, знижка, передоплата доставки, подарунок
   $bf_breakdown = get_post_meta( $order->ID, '_cbbf_breakdown', true );
-  $bf_discount  = is_array( $bf_breakdown ) ? (float) $bf_breakdown['discount'] : 0.0;
+  // знижка за акцією «другий набір» + знижка за промокодом
+  $bf_discount  = is_array( $bf_breakdown ) ? (float) $bf_breakdown['discount'] + (float) ( $bf_breakdown['coupon']['discount'] ?? 0 ) : 0.0;
   $bf_shipping  = is_array( $bf_breakdown ) ? (float) $bf_breakdown['shipping'] : 0.0;
   if ( is_array( $bf_breakdown ) && ! empty( $bf_breakdown['pack'] ) ) {
     $products[] = [

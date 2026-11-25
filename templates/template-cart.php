@@ -118,6 +118,8 @@ $f             = static fn( string $n ) => $fragments[ $n ] ?? '';
                   <div class="cart-box__widget cbbf-packs" id="cart-photo-packs"><?= $card_option ?></div>
                 <? endif ?>
 
+                <div class="cbbf-coupon-box cbbf-desktop-only" data-cbbf-frag="coupon"><?= $f( 'coupon' ) ?></div>
+
                 <div class="cart-box__widget cart-box__widget_simple cbbf-summary-box cbbf-desktop-only" data-cbbf-frag="summary"><?= $f( 'summary' ) ?></div>
 
                 <div class="cart-box__buttons cbbf-desktop-only">
@@ -341,6 +343,8 @@ $f             = static fn( string $n ) => $fragments[ $n ] ?? '';
                   </div>
                 </div>
               </div>
+
+              <div class="cbbf-coupon-box cbbf-mobile-only" data-cbbf-frag="coupon"><?= $f( 'coupon' ) ?></div>
 
               <div class="cart-box__widget cart-box__widget_simple cbbf-summary-box cbbf-mobile-only" data-cbbf-frag="summary"><?= $f( 'summary' ) ?></div>
 
