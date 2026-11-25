@@ -79,6 +79,25 @@
             "maxlength": ""
         },
         {
+            "key": "field_cb_samovyviz_description",
+            "label": "Самовивіз: текст у кошику",
+            "name": "samovyviz_description",
+            "type": "wysiwyg",
+            "instructions": "Показується в кошику в блоці «Виберіть спосіб доставки», коли обрано «Самовивіз». Посилання «відкрити на Google maps» додається під текстом автоматично — за полем «Адрес». Порожньо — стандартний текст.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "Забирати ваше замовлення за адресою м. Київ, вул. О. Туманяна, 15а з понеділка по суботу з 10:00 до 18:30.",
+            "tabs": "all",
+            "toolbar": "basic",
+            "media_upload": 0,
+            "delay": 0
+        },
+        {
             "key": "field_5cce189fc01bf",
             "label": "Facebook",
             "name": "facebook",
@@ -251,7 +270,7 @@
                             "required": 0,
                             "conditional_logic": 0,
                             "wrapper": {
-                                "width": "",
+                                "width": "35",
                                 "class": "",
                                 "id": ""
                             },
@@ -270,7 +289,7 @@
                             "required": 0,
                             "conditional_logic": 0,
                             "wrapper": {
-                                "width": "",
+                                "width": "15",
                                 "class": "",
                                 "id": ""
                             },
@@ -290,7 +309,7 @@
                             "required": 0,
                             "conditional_logic": 0,
                             "wrapper": {
-                                "width": "",
+                                "width": "32",
                                 "class": "",
                                 "id": ""
                             },
@@ -304,6 +323,25 @@
                             "max_size": "",
                             "mime_types": "jpg, jpeg, png, webp",
                             "preview_size": "thumbnail"
+                        },
+                        {
+                            "key": "field_cbbf_pack_active",
+                            "label": "Показувати",
+                            "name": "active",
+                            "type": "true_false",
+                            "instructions": "Вимкніть, коли пакета немає на складі.",
+                            "required": 0,
+                            "conditional_logic": 0,
+                            "wrapper": {
+                                "width": "18",
+                                "class": "",
+                                "id": ""
+                            },
+                            "message": "",
+                            "default_value": 1,
+                            "ui": 1,
+                            "ui_on_text": "Так",
+                            "ui_off_text": "Ні"
                         }
                     ]
                 }
@@ -327,5 +365,5 @@
     "hide_on_screen": "",
     "active": 1,
     "description": "",
-    "modified": 1795454525
+    "modified": 1795603618
 }

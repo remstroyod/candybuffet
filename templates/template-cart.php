@@ -27,8 +27,9 @@ foreach ( array_keys( $cart->get_items() ) as $pid ) {
 }
 $active_method = $has_bf ? CartState::delivery() : null;
 $order_for     = $has_bf ? CartState::order_for() : 'self';
-$selected_pack = $has_bf ? CartState::pack() : null;
-$packs         = $has_bf ? CartState::packs() : [];
+// Фірмові пакети — lib/packs.php; ціну в суму замовлення додає кошик (cb-black-friday), тому блок лише разом з ним.
+$selected_pack = $has_bf ? CB_Packs::selected() : null;
+$packs         = $has_bf ? CB_Packs::all() : [];
 $gateways      = apply_filters( 'simplebasket/gateways', [] );
 $card_max      = $has_bf ? (int) Settings::get( 'card_text_max' ) : 200;
 $no_receipt    = $has_bf ? (bool) Settings::get( 'gift_no_receipt_default' ) : true;
@@ -84,7 +85,7 @@ $f             = static fn( string $n ) => $fragments[ $n ] ?? '';
 
                 <? if ( $packs ): ?>
                   <div class="cart-box__widget cbbf-packs" id="cart-photo-packs">
-                    <div class="cart-box__widget-title"><?= esc_html( CartState::packs_title() ) ?></div>
+                    <div class="cart-box__widget-title"><?= esc_html( CB_Packs::title() ) ?></div>
                     <div class="cbbf-packs__list">
                       <label class="cbbf-pack radio">
                         <input type="radio" name="extras[pack]" value="none" data-cbbf-pack <?= checked( $selected_pack, null, false ) ?>>
@@ -197,11 +198,15 @@ $f             = static fn( string $n ) => $fragments[ $n ] ?? '';
                     <input name="billing[name]" id="field-cart-contact-name" type="text" autocomplete="name" aria-required="true" class="form-control">
                     <label for="field-cart-contact-name" class="control-label">Ім’я</label>
                   </div>
-                  <div class="form-group">
-                    <input name="billing[phone]" id="field-cart-contact-phone" type="tel" inputmode="tel" autocomplete="tel"
-                           aria-required="true" data-mask="+380 99 999 99 99" class="form-control">
-                    <label for="field-cart-contact-phone" class="control-label">Телефон</label>
-                  </div>
+                  <? if ( class_exists( 'CB_Phone' ) ): ?>
+                    <?= CB_Phone::field( [ 'name' => 'billing[phone]', 'id' => 'field-cart-contact-phone', 'label' => 'Телефон' ] ) ?>
+                  <? else: ?>
+                    <div class="form-group">
+                      <input name="billing[phone]" id="field-cart-contact-phone" type="tel" inputmode="tel" autocomplete="tel"
+                             aria-required="true" data-mask="+380 99 999 99 99" class="form-control">
+                      <label for="field-cart-contact-phone" class="control-label">Телефон</label>
+                    </div>
+                  <? endif ?>
                   <div class="form-group">
                     <input name="billing[email]" id="field-cart-contact-email" type="email" inputmode="email" autocomplete="email" class="form-control">
                     <label for="field-cart-contact-email" class="control-label">E-mail — для чеку і статусу (необов’язково)</label>

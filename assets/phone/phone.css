@@ -1,0 +1,23 @@
+/* Телефон з кодом країни (lib/phone.php) */
+.cb-phone { position: relative; }
+.cb-phone .control-label {
+  position: absolute; left: 5px; top: -10px; margin: 0; z-index: 2; pointer-events: none;
+  font-size: 10px; line-height: 1.4; color: #ae8c64;
+}
+.cb-phone__row { display: flex; align-items: stretch; }
+.cb-phone__cc {
+  position: relative; flex: 0 0 auto; display: flex; align-items: center;
+  border-bottom: 1px solid #e2e2e2; padding: 0 22px 0 5px; margin-right: 10px;
+  font-size: 14px; line-height: 1; color: #28292f; white-space: nowrap;
+}
+.cb-phone__cc::after {
+  content: ''; position: absolute; right: 6px; top: 50%; width: 6px; height: 6px; margin-top: -5px;
+  border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: rotate(45deg);
+}
+.cb-phone__cc select {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+  font-size: 16px; /* no zoom on iOS */ border: 0; -webkit-appearance: none; appearance: none;
+}
+.cb-phone__cc:focus-within { border-bottom-color: #ae8c64; outline: 2px solid rgba(174, 140, 100, .35); outline-offset: 2px; }
+.cb-phone__row .form-control { flex: 1 1 auto; min-width: 0; }
+.cb-phone.has-error .cb-phone__cc { border-bottom-color: #c0392b; }

@@ -49,6 +49,8 @@ $sage_includes = [
   'lib/keycrm.php', // KeyCRM
 
   'lib/thank-you.php', // Сторінка «Дякуємо за замовлення»
+  'lib/phone.php', // Телефон з кодом країни в кошику
+  'lib/packs.php', // Фірмові пакети в кошику
 ];
 
 foreach ($sage_includes as $file) {

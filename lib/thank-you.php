@@ -175,8 +175,11 @@ function cb_ty_mask_phone( string $phone ): string {
 
   $last = substr( $digits, -2 );
 
-  if ( strlen( $digits ) >= 12 ) {
-    return '+' . substr( $digits, 0, 3 ) . ' •• ••• •• ' . $last;
+  if ( strlen( $digits ) === 12 && strpos( $digits, '380' ) === 0 ) {
+    return '+380 •• ••• •• ' . $last;
+  }
+  if ( strlen( $digits ) >= 8 && $digits[0] !== '0' ) {
+    return '+•• ••• ••• ' . $last; // іноземний номер: код країни буває 1–3 цифри
   }
 
   return '••• •• ' . $last;
